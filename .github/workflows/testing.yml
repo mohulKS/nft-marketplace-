@@ -1,0 +1,24 @@
+name: Testing
+on: [push]
+env:
+    PRIVATE_KEY: "0x0000000000000000000000000000000000000000"
+jobs:
+    contract-test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: setup nodejs
+              uses: actions/setup-node@v2
+              with:
+                  node-version: "14"
+                  cache: "npm"
+
+            - name: setup packages
+              run: npm i --silent
+
+            - name: generate types from typechain
+              run: npx hardhat typechain
+
+            - name: hardhat test
+              run: npx hardhat test
