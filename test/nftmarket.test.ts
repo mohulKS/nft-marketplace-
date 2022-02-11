@@ -15,7 +15,6 @@ describe("NFTMarket tests", () => {
         admin: string,
         alice: string,
         bob: string;
-    let listingPrice: BigNumber;
 
     before(async () => {
         NFTMARKET = (await ethers.getContractFactory("NFTMarket")) as NFTMarket__factory;
@@ -68,11 +67,9 @@ describe("NFTMarket tests", () => {
                 "0x0000000000000000000000000000000000000000"
             );
             await expect(
-                nftMarket
-                    .connect(bobSigner)
-                    .createMarketSale(nftContractaddress, 1, {
-                        value: ethers.utils.parseUnits("90", "ether"),
-                    })
+                nftMarket.connect(bobSigner).createMarketSale(nftContractaddress, 1, {
+                    value: ethers.utils.parseUnits("90", "ether"),
+                })
             ).to.be.revertedWith("Please submit the asking price in order to purchase the item");
             //await expect((await nftMarket.ownerNFT(1)).toString()).eq((await bobSigner.getAddress()).toString());
         });
