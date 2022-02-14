@@ -27,7 +27,13 @@ contract NFTMarket is ReentrancyGuard {
         bool sold;
     }
 
+    struct offerPrice {
+        uint256 obuyprice;
+        bool confirm;
+    }
+
     mapping(uint256 => MarketItem) private idToMarketItem;
+    mapping(uint256 => offerPrice) private offerItem;
 
     event MarketItemCreated(
         uint256 indexed itemId,
@@ -74,14 +80,23 @@ contract NFTMarket is ReentrancyGuard {
     function createMarketSale(address nftContract, uint256 itemId) public payable nonReentrant {
         uint256 price = idToMarketItem[itemId].price;
         uint256 tokenId = idToMarketItem[itemId].tokenId;
-        require(msg.value == price, "Please submit the asking price in order to purchase the item");
+        if (price == msg.value) {
+            idToMarketItem[itemId].seller.transfer(price);
+            IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
+            idToMarketItem[itemId].owner = payable(msg.sender);
+            idToMarketItem[itemId].sold = true;
+            _itemsSold.increment();
+            owner.transfer(listingPrice);
+        } else {
+            offerItem[itemId] = offerPrice(msg.value, true);
+        }
+    }
 
-        idToMarketItem[itemId].seller.transfer(msg.value);
-        IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
-        idToMarketItem[itemId].owner = payable(msg.sender);
-        idToMarketItem[itemId].sold = true;
-        _itemsSold.increment();
-        payable(owner).transfer(listingPrice);
+    function approveOfferPrice(uint256 itemId) public nonReentrant {
+        require(offerItem[itemId].confirm == true, "No offer for the item");
+        require(idToMarketItem[itemId].seller == msg.sender, "Only seller of the item can approve the offer price");
+        idToMarketItem[itemId].price = offerItem[itemId].obuyprice;
+        offerItem[itemId].confirm = false;
     }
 
     function fetchMarketItems() public view returns (MarketItem[] memory) {

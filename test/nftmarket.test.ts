@@ -56,28 +56,9 @@ describe("NFTMarket tests", () => {
         });
     });
     describe("Creating Market Sale", () => {
-        it("tries to buy an item with unequal price", async () => {
+        it("Buying an item with the price mentioned", async () => {
             const nftContractaddress = nft.address;
-            const price1 = ethers.utils.parseUnits("100", "ether");
-            await nft.connect(aliceSigner).createToken("https://www.tokenlocation.com");
-            await nftMarket
-                .connect(aliceSigner)
-                .createMarketItem(nftContractaddress, 1, price1, { value: parseEther("0.025") });
-            await expect((await nftMarket.ownerNFT(1)).toString()).eq(
-                "0x0000000000000000000000000000000000000000"
-            );
-            await expect(
-                nftMarket
-                    .connect(bobSigner)
-                    .createMarketSale(nftContractaddress, 1, {
-                        value: ethers.utils.parseUnits("90", "ether"),
-                    })
-            ).to.be.revertedWith("Please submit the asking price in order to purchase the item");
-            //await expect((await nftMarket.ownerNFT(1)).toString()).eq((await bobSigner.getAddress()).toString());
-        });
-        it("Buying an item and the ownership is transfered", async () => {
-            const nftContractaddress = nft.address;
-            const price1 = ethers.utils.parseUnits("100", "ether");
+            const price1 = ethers.utils.parseUnits("50", "ether");
             await nft.connect(aliceSigner).createToken("https://www.tokenlocation.com");
             await nftMarket
                 .connect(aliceSigner)
@@ -86,6 +67,30 @@ describe("NFTMarket tests", () => {
                 "0x0000000000000000000000000000000000000000"
             );
             await nftMarket.connect(bobSigner).createMarketSale(nftContractaddress, 1, { value: price1 });
+            await expect((await nftMarket.ownerNFT(1)).toString()).eq(
+                (await bobSigner.getAddress()).toString()
+            );
+        });
+        it("tries to buy with an offer price", async () => {
+            const nftContractaddress = nft.address;
+            const price1 = ethers.utils.parseUnits("50", "ether");
+            await nft.connect(aliceSigner).createToken("https://www.tokenlocation.com");
+            await nftMarket
+                .connect(aliceSigner)
+                .createMarketItem(nftContractaddress, 1, price1, { value: parseEther("0.025") });
+            await expect((await nftMarket.ownerNFT(1)).toString()).eq(
+                "0x0000000000000000000000000000000000000000"
+            );
+            await nftMarket
+                .connect(bobSigner)
+                .createMarketSale(nftContractaddress, 1, { value: ethers.utils.parseUnits("40", "ether") });
+            await expect(nftMarket.approveOfferPrice(1)).to.be.revertedWith(
+                "Only seller of the item can approve the offer price"
+            );
+            await nftMarket.connect(aliceSigner).approveOfferPrice(1);
+            await nftMarket
+                .connect(bobSigner)
+                .createMarketSale(nftContractaddress, 1, { value: ethers.utils.parseUnits("40", "ether") });
             await expect((await nftMarket.ownerNFT(1)).toString()).eq(
                 (await bobSigner.getAddress()).toString()
             );
