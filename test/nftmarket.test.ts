@@ -15,7 +15,6 @@ describe("NFTMarket tests", () => {
         admin: string,
         alice: string,
         bob: string;
-    let listingPrice: BigNumber;
 
     before(async () => {
         NFTMARKET = (await ethers.getContractFactory("NFTMarket")) as NFTMarket__factory;
