@@ -78,6 +78,7 @@ contract NFTMarket is ReentrancyGuard {
     }
 
     function createMarketSale(address nftContract, uint256 itemId) public payable nonReentrant {
+        require(offerItem[itemId].confirm != true, "Item is under an offer please wait");
         uint256 price = idToMarketItem[itemId].price;
         uint256 tokenId = idToMarketItem[itemId].tokenId;
         if (price == msg.value) {
@@ -96,6 +97,12 @@ contract NFTMarket is ReentrancyGuard {
         require(offerItem[itemId].confirm == true, "No offer for the item");
         require(idToMarketItem[itemId].seller == msg.sender, "Only seller of the item can approve the offer price");
         idToMarketItem[itemId].price = offerItem[itemId].obuyprice;
+        offerItem[itemId].confirm = false;
+    }
+
+    function disapproveOfferPrice(uint256 itemId) public nonReentrant {
+        require(offerItem[itemId].confirm == true, "No offer for the item");
+        require(idToMarketItem[itemId].seller == msg.sender, "Only seller of the item can approve the offer price");
         offerItem[itemId].confirm = false;
     }
 

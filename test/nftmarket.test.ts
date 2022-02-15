@@ -95,6 +95,28 @@ describe("NFTMarket tests", () => {
                 (await bobSigner.getAddress()).toString()
             );
         });
+        it("tries to buy with an offer price and seller disapproves", async () => {
+            const nftContractaddress = nft.address;
+            const price1 = ethers.utils.parseUnits("50", "ether");
+            await nft.connect(aliceSigner).createToken("https://www.tokenlocation.com");
+            await nftMarket
+                .connect(aliceSigner)
+                .createMarketItem(nftContractaddress, 1, price1, { value: parseEther("0.025") });
+            await expect((await nftMarket.ownerNFT(1)).toString()).eq(
+                "0x0000000000000000000000000000000000000000"
+            );
+            await nftMarket
+                .connect(bobSigner)
+                .createMarketSale(nftContractaddress, 1, { value: ethers.utils.parseUnits("40", "ether") });
+            await expect(
+                nftMarket.createMarketSale(nftContractaddress, 1, { value: parseEther("40") })
+            ).to.be.revertedWith("Item is under an offer please wait");
+            await nftMarket.connect(aliceSigner).disapproveOfferPrice(1);
+            await nftMarket
+                .connect(bobSigner)
+                .createMarketSale(nftContractaddress, 1, { value: parseEther("50") });
+            await expect(await nftMarket.ownerNFT(1).toString()).eq(await bobSigner.getAddress().toString());
+        });
     });
     describe("fetching NFTS", () => {
         it("fetches nfts of alice and nfts present in market", async () => {
