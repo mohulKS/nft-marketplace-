@@ -1,4 +1,4 @@
-# Hardhat Template
+# Hardhat Template .
 
 This is a github template repository to build projects upon. Initialising hardhat projects with the template saves on hardhat setup, configuring plugins. It's packed with all the mainly required setup. bonus: a github workflow for running tests on push
 
